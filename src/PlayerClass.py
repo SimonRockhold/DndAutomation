@@ -3,6 +3,7 @@ from Equipment import InventoryItem, Weapon, Armor
 from Infusion import Infusion
 from SpellLoader import SpellLoader, Spell
 from Heritage import Heritage
+from PlayerClass import PlayerClass
 import math
 
 '''
@@ -17,7 +18,7 @@ maybe I should have the PlayerClass be a member of the Character class
 '''
 class Character:
     "'Describes the state of a character"
-    def __init__(self, strength:int, dextertity:int, constitution:int, intelligence:int, wisdom:int, charisma:int, level: int, playerClass=None, maxHealth:int = None, heritage:Heritage = None) -> None:
+    def __init__(self, strength:int, dextertity:int, constitution:int, intelligence:int, wisdom:int, charisma:int, level: int, playerClass:PlayerClass=None, maxHealth:int = None, heritage:Heritage = None) -> None:
         self.profBonus = math.ceil(level/4) + 1
 
         self.heritage = heritage
@@ -155,10 +156,17 @@ class Character:
         
 # END Character class
 
+class PlayerClass:
+    def __init__(self, character: Character) -> None:
+        self.name = None
+        self.character = character
+        return
 
-class Artificer:
+class Artificer(PlayerClass):
     from Infusion import Infusion
     def __init__(self, character: Character) -> None:
+        super().__init__(character)
+        self.name = 'Artificer'
         self.spellcastingAbility = 'int'
         self.spellSaveDC = 8 + character.profBonus + character.abilityScores[self.spellcastingAbility][1]
         self.spellAttackBonus = character.profBonus + character.abilityScores[self.spellcastingAbility][1]
@@ -177,29 +185,31 @@ class Artificer:
         '''Getter for maxNumInfusions. No setter provided intentionally as value is always half of maxNumInfusions'''
         return self.maxNumInfusions // 2
 
- #   def learnInfusion(self, *infusions:Infusion):
- #       """Add Infusion to set of known Infusions"""
- #       totalNumInfusions = len(self.knownInfusions) + len(self.preparedInfusions)
- #       if totalNumInfusions >= self.maxNumInfusions:
- #           raise Exception('Cannot learn additional Infusions')
- #       for i in infusions:
- #           if (totalNumInfusions + 1) >= self.maxNumInfusions:
- #               raise Exception('Exceded max number of Infusions')
- #           self.knownInfusions.add(i)
- #       return
+    @property
+    def totalNumInfusions(self):
+        '''Return the number of infusions both prepared and known'''
+        return len(self.knownInfusions) + len(self.preparedInfusions)
 
-    def learnInfusion(self, infusion:Infusion):
-        """Add Infusion to set of known Infusions"""
+    def canLearnInfusion(self, infusion:Infusion) -> bool:
         if infusion in self.knownInfusions or infusion in self.preparedInfusions:
-            raise Exception('Infusion already known')
+            raise Exception(f"Infusion ({infusion.name}) already known")
         totalNumInfusions = len(self.knownInfusions) + len(self.preparedInfusions)
         if totalNumInfusions >= self.maxNumInfusions:
-            raise Exception('Cannot learn additional Infusions')
-        self.knownInfusions.add(infusion)
+            raise Exception('Max number of infusions reached')
+        return
+
+    def learnInfusion(self, *infusions:Infusion):
+        """Add Infusion to set of known Infusions"""
+        newNumTotalInfusions = self.totalNumInfusions + len(infusions)
+        if newNumTotalInfusions >= self.maxNumInfusions:
+            raise Exception('New Infusions would exceed max number of Infusions')
+        for i in infusions:
+            self.canLearnInfusion(i)
+            self.knownInfusions.add(i)
         return
 
     # TODO allow multiple infusions to be passed as arguments to bulk-prepare Infusions
-    def prepareInfusion(self, infusion:Infusion):
+    def prepareInfusion(self, infusion: Infusion):
         """Add infusion(s) to the set of prepared infusions
         
         Checks that number of prepared infusions is <= number of elements 
@@ -207,6 +217,8 @@ class Artificer:
         """
         if infusion in self.preparedInfusions:
             raise Exception('Infusion already prepared')
+        if infusion not in self.knownInfusions:
+            raise Exception(f"Infusion({infusion.name}) not yet known")
         if len(self.preparedInfusions) >= self.maxNumInfusionsPrepared:
             raise Exception('cannot prepare more infusions')
         # Add the named Infusion to preparedInfusions and remove from knownInfusions
