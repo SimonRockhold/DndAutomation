@@ -17,12 +17,12 @@ maybe I should have the PlayerClass be a member of the Character class
 '''
 class Character:
     "'Describes the state of a character"
-    def __init__(self, strength:int, dextertity:int, constitution:int, intelligence:int, wisdom:int, charisma:int, level: int, maxHealth:int = None, heritage:Heritage = None) -> None:
-
+    def __init__(self, strength:int, dextertity:int, constitution:int, intelligence:int, wisdom:int, charisma:int, level: int, playerClass=None, maxHealth:int = None, heritage:Heritage = None) -> None:
         self.profBonus = math.ceil(level/4) + 1
 
         self.heritage = heritage
-        self.playerClass = None
+        # class-specific abilities should be located in a player class object rather than as an inheritance relationship
+        self.playerClass = playerClass
 
         self.proficiencies = set()
         self.proficiencies.add('simple weapons')
@@ -156,14 +156,12 @@ class Character:
 # END Character class
 
 
-class Artificer(Character):
+class Artificer:
     from Infusion import Infusion
-    def __init__(self, strength: int, dextertity: int, constitution: int, intelligence: int, wisdom: int, charisma: int, level: int, proficiencyBonus: int, health: int) -> None:
-        super().__init__(strength, dextertity, constitution, intelligence, wisdom, charisma, level, proficiencyBonus, health=health)
-
+    def __init__(self, character: Character) -> None:
         self.spellcastingAbility = 'int'
-        self.spellSaveDC = 8 + self.profBonus + self.abilityScores[self.spellcastingAbility][1]
-        self.spellAttackBonus = self.profBonus + self.abilityScores[self.spellcastingAbility][1]
+        self.spellSaveDC = 8 + character.profBonus + character.abilityScores[self.spellcastingAbility][1]
+        self.spellAttackBonus = character.profBonus + character.abilityScores[self.spellcastingAbility][1]
         
         # Infusions
         self.maxNumInfusions = 0
