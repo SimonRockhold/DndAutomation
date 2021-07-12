@@ -1,11 +1,12 @@
 # %%
 from Equipment import Weapon
-from PlayerClass import Artificer
+from PlayerClass import Artificer, Character
 from Infusion import *
 from Spell import Spell
 from SpellLoader import SpellLoader
   
-bojon = Artificer(12, 16, 15, 20, 14, 11, level=6, proficiencyBonus=3, health=38)
+artificer = Artificer()
+bojon = Character(12, 16, 15, 20, 14, 11, level=6, playerClass = Artificer(), health=38)
 bojon.addProficiencies('martial weapons', 'firearms')
 bojon.maxNumInfusions = 6
 

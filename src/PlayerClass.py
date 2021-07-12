@@ -3,7 +3,7 @@ from Equipment import InventoryItem, Weapon, Armor
 from Infusion import Infusion
 from SpellLoader import SpellLoader, Spell
 from Heritage import Heritage
-from PlayerClass import PlayerClass
+import PlayerClass
 import math
 
 '''
@@ -17,13 +17,14 @@ maybe I should have the PlayerClass be a member of the Character class
         -Equipment
 '''
 class Character:
-    "'Describes the state of a character"
-    def __init__(self, strength:int, dextertity:int, constitution:int, intelligence:int, wisdom:int, charisma:int, level: int, playerClass:PlayerClass=None, maxHealth:int = None, heritage:Heritage = None) -> None:
+    '''Describes the state of a character'''
+    def __init__(self, strength:int, dextertity:int, constitution:int, intelligence:int, wisdom:int, charisma:int, level: int, playerClass: PlayerClass, maxHealth:int = None, heritage:Heritage = None) -> None:
         self.profBonus = math.ceil(level/4) + 1
 
         self.heritage = heritage
         # class-specific abilities should be located in a player class object rather than as an inheritance relationship
         self.playerClass = playerClass
+        self.playerClass.linkToCharacter(self)
 
         self.proficiencies = set()
         self.proficiencies.add('simple weapons')
@@ -65,10 +66,14 @@ class Character:
         self.spells: Spell = None
 
     # End init
+    def addPlayerClass(self, playerClass:PlayerClass):
+        self.playerClass = playerClass
+        return
+
     @classmethod
     def buildCharFromScratch(abilityScores, race):
         """NOT YET IMPLEMENTED"""
-        pass
+        return NotImplemented
 
     @property
     def armorClass(self):
@@ -157,10 +162,14 @@ class Character:
 # END Character class
 
 class PlayerClass:
-    def __init__(self, character: Character) -> None:
+    def __init__(self) -> None:
         self.name = None
-        self.character = character
+        self.character = None
         return
+
+    def linkToCharacter(self, character: Character):
+        '''Assign passed Character object, called by Character object'''
+        self.character = character
 
 class Artificer(PlayerClass):
     from Infusion import Infusion
@@ -172,7 +181,7 @@ class Artificer(PlayerClass):
         self.spellAttackBonus = character.profBonus + character.abilityScores[self.spellcastingAbility][1]
         
         # Infusions
-        self.maxNumInfusions = 0
+        self.maxNumInfusions = None
         self.maxNumInfusionsPrepared
         self.knownInfusions = set()
         self.preparedInfusions = set()
@@ -224,7 +233,7 @@ class Artificer(PlayerClass):
         # Add the named Infusion to preparedInfusions and remove from knownInfusions
         self.preparedInfusions.add(infusion)
         self.knownInfusions.remove(infusion)
-        infusion.activate(self.inventory)
+        infusion.activate(self.character.inventory)
         pass
 
     def clearInfusions(self):
@@ -245,7 +254,7 @@ class SteelDefender:
     def __init__(self, artificer: Artificer) -> None:
         self.artificer = artificer
         self.armorClass = 15
-        self.maxHealth = 2 + self.artificer.abilityScores['int'][1] + (artificer.level * 5)
+        self.maxHealth = 2 + self.artificer.character.abilityScores['int'][1] + (artificer.level * 5)
         self.abilityScores = {
         'str':(14, 2),
         'dex':(12, 1),
@@ -262,3 +271,5 @@ class SteelDefender:
 
 
 
+
+# %%
