@@ -1,9 +1,9 @@
-# %% Character class
-
+# %% Character 
 from Equipment import InventoryItem, Weapon, Armor
 from Infusion import Infusion
 from SpellLoader import SpellLoader, Spell
 from Heritage import Heritage
+import math
 
 '''
 maybe I should have the PlayerClass be a member of the Character class
@@ -17,11 +17,12 @@ maybe I should have the PlayerClass be a member of the Character class
 '''
 class Character:
     "'Describes the state of a character"
-    def __init__(self, strength:int, dextertity:int, constitution:int, intelligence:int, wisdom:int, charisma:int, level: int, proficiencyBonus:int, maxHealth:int = None, heritage:Heritage = None) -> None:
-        #TODO proficiency should be determined directly by level
-        self.profBonus = proficiencyBonus
+    def __init__(self, strength:int, dextertity:int, constitution:int, intelligence:int, wisdom:int, charisma:int, level: int, maxHealth:int = None, heritage:Heritage = None) -> None:
+
+        self.profBonus = math.ceil(level/4) + 1
 
         self.heritage = heritage
+        self.playerClass = None
 
         self.proficiencies = set()
         self.proficiencies.add('simple weapons')
