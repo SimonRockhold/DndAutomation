@@ -11,7 +11,6 @@ class PlayerClass:
         return
 
 class Artificer(PlayerClass):
-    # Infusions are unique to Artificers
     def __init__(self) -> None:
         super().__init__()
         self.name = 'Artificer'
@@ -47,18 +46,6 @@ class Artificer(PlayerClass):
             raise Exception('Max number of infusions reached')
         return
 
-    #def learnInfusion(self, *infusions):
-    #    """Add Infusion to set of known Infusions"""
-    #    newNumTotalInfusions = self.totalNumInfusions + len(infusions)
-    #    if newNumTotalInfusions >= self.maxNumInfusions:
-    #        raise Exception('New Infusions would exceed max number of Infusions')
-    #    for i in infusions:
-    #        if i in self.knownInfusions:
-    #            raise Exception(f"Infusion ({i.name}) already known")
-    #        # self.canLearnInfusion(i)
-    #        self.knownInfusions.add(i)
-    #    return
-
     def learnSingleInfusion(self, infusion_in):
         if not isinstance(infusion_in, Infusion):
             raise TypeError(f"{infusion_in} is not an Infusion")
@@ -90,17 +77,17 @@ class Artificer(PlayerClass):
             raise Exception(f"Infusion({infusion.name}) not yet known")
         if len(self.preparedInfusions) >= self.maxNumInfusionsPrepared:
             raise Exception('cannot prepare more infusions')
-        # Add the named Infusion to preparedInfusions and remove from knownInfusions
+
         self.preparedInfusions.add(infusion)
         self.knownInfusions.remove(infusion)
         infusion.activate(characterInventory)
         pass
 
-    def clearInfusions(self):
+    def clearInfusions(self, inventory:dict):
         """Deactivate and unprepare all infusions"""
         i:Infusion
         for i in self.preparedInfusions:
-            i.deactivate(self.inventory)
+            i.deactivate(inventory)
         self.knownInfusions.update(self.preparedInfusions)
         self.preparedInfusions.clear()
 
