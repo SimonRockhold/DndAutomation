@@ -8,7 +8,7 @@ class PlayerClass:
         self.name = None
         self.character = None
         self.spellCastingAbility = None
-        return
+        self.classSpells = None
 
 class Artificer(PlayerClass):
     def __init__(self) -> None:
@@ -44,7 +44,6 @@ class Artificer(PlayerClass):
         totalNumInfusions = len(self.knownInfusions) + len(self.preparedInfusions)
         if totalNumInfusions >= self.maxNumInfusions:
             raise Exception('Max number of infusions reached')
-        return
 
     def learnSingleInfusion(self, infusion_in):
         if not isinstance(infusion_in, Infusion):
@@ -95,7 +94,6 @@ class BattleSmith(Artificer):
     def __init__(self, strength: int, dextertity: int, constitution: int, intelligence: int, wisdom: int, charisma: int, level: int, proficiencyBonus: int, health: int) -> None:
         super().__init__(strength, dextertity, constitution, intelligence, wisdom, charisma, level, proficiencyBonus, health)
         self.steelDefender = SteelDefender(self)
-        return
 
 class SteelDefender:
     def __init__(self, artificer: Artificer) -> None:
@@ -110,7 +108,6 @@ class SteelDefender:
         'wis':(10, 0),
         'cha':(6, -2)}
 
-        return 
     def attack_str(self):
         atk = self.artificer.spellAttackBonus
         dmg = self.artificer.profBonus
