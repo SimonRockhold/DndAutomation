@@ -6,9 +6,8 @@ import unittest
 
 class test(unittest.TestCase):
     def setUp(self):
-        self.c = Character(12, 20, 15, 20, 14, 11, level=6, playerClass=Artificer(), maxHealth=38)
+        self.c = Character(12, 20, 15, 20, 14, 11, level=6, playerClass=Artificer(levels=5), maxHealth=38)
         self.c.addProficiencies('martial weapons', 'firearms')
-        self.c.playerClass.maxNumInfusions = 6
         
     def tearDown(self):
         del self.c

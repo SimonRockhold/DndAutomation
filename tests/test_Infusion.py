@@ -6,8 +6,7 @@ import unittest
 
 class test(unittest.TestCase):
     def setUp(self) -> None:
-        self.artificer = Artificer()
-        self.artificer.maxNumInfusions = 4
+        self.artificer = Artificer(levels=5)
         scaleMail = Armor('Scale Mail', 'it\'s some pretty neat armor', 14, 'medium')
         self.inventory = dict()
         weapons = dict()
