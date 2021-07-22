@@ -6,14 +6,8 @@ from Equipment import Weapon
 from Infusion import WeaponInfusion
 import unittest
 
-import os
-
-print(os.getcwd())
-
-
 class test(unittest.TestCase):
     def setUp(self):
-        print(f"Hello = {os.getenv('FLOOP')}")
         self.character = Character(12, 16, 15, 20, 14, 11, level=6, playerClass = Artificer(levels=6), maxHealth=38)
         warhammer = Weapon('Warhammer', 12, 'str', 'bludgeoning', 'this is a warhammer', requiredProficiency={'martial weapons'})
         self.character.addWeaponToInventory(warhammer)
