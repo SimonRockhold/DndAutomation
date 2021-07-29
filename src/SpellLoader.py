@@ -2,18 +2,14 @@
 
 from Spell import Spell
 import json
-import os
 
 class SpellLoader:
-    def __init__(self, filename:str = 'Artificer_spell_list.json') -> None:
-        self.filePath = os.getenv('DATADIR')
-        self.fullFilePath = self.filePath + '/' + filename
-        # print(self.fullFilePath)
+    def __init__(self, filename:str) -> None:
+        self.fullFilePath = f"data/{filename}"
         with open(self.fullFilePath) as json_file:
             self.data = json.load(json_file)
 
         self.spells = self.createSpellDict(self.data)
-        return
 
     def createSpellDict(self, data):
         spells = dict()
@@ -37,7 +33,7 @@ class SpellLoader:
         name = spell_json['name']
         level = spell_json['level']
         school = appendix[spell_json['school']]
-        time = spell_json['time']
+        time = spell_json['time'][0]
         range = spell_json['range']
         components = spell_json['components']
         duration = spell_json['duration'][0]
@@ -51,16 +47,3 @@ def default():
     with open('spells-sublist-data.json') as json_file:
         data = json.load(json_file)
     return data
-    
-# a = SpellLoader()
-# for i in a.spells.keys():
-#    print(i)
-
-# s = a.spells['Absorb Elements']
-# %%
-#for i in a.spells.values():
-#     print(i)
-#     print()
-
-#print('done')
-# %%
