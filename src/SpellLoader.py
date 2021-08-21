@@ -1,10 +1,9 @@
-# %%
-
 from Spell import Spell
 import json
 
 class SpellLoader:
     def __init__(self, filename:str) -> None:
+        #self.fullFilePath = f"/home/simon/DndAutomation/data/{filename}"
         self.fullFilePath = f"data/{filename}"
         with open(self.fullFilePath) as json_file:
             self.data = json.load(json_file)
