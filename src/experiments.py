@@ -6,10 +6,9 @@ from Infusion import *
 from Spell import Spell
 from SpellLoader import SpellLoader
   
-bojon = Character(12, 16, 15, 20, 14, 11, level=6, playerClass=Artificer(), maxHealth=38)
+bojon = Character(12, 16, 15, 20, 14, 11, level=6, playerClass=Artificer(levels=6), maxHealth=38)
 bojon.addProficiencies('martial weapons', 'firearms')
 bojonClass:Artificer = bojon.playerClass
-bojonClass.maxNumInfusions = 6
 
 # initialize weapons
 # Warhammer
@@ -43,12 +42,12 @@ manyHandedPouch = ItemInfusion('Many-Handed Pouch',
 
 # Learn Infusions
 bojonClass.learnInfusions(repeatingShot, enhancedDefence)
-bojonClass.prepareInfusion(repeatingShot, bojon.inventory)
+bojon.playerClass.prepareInfusion(repeatingShot, bojon.inventory)
 print(bojonClass.knownInfusions)
-bojonClass.learnInfusions(repeatingShot)
 
 # Initialize Spell list
-spellLoader = SpellLoader('Bojon_spell_list.json')
-bojon.spells
+for i in bojon.availableSpells:
+    print(i)
+#print(bojon.availableSpells)
 
 # %%

@@ -49,8 +49,11 @@ class Character:
         }
 
         # spellcasting
-        self.spells: Spell = None
-        self.playerClass.classSpells
+        self.knownSpells: dict = None
+        if self.playerClass != None:
+            self.knownSpells = self.playerClass.classSpells
+        spellSlotsPerSpellLevel = dict()
+        self.preparedSpells = dict()
 
         self.spellSaveDC: int = None
         self.spellAttackBonus: int = None
@@ -60,17 +63,29 @@ class Character:
             self.spellAttackBonus = self.profBonus + self.abilityScores[self.spellcastingAbility][1]
 
     # End init
-    def addPlayerClass(self, playerClass:PlayerClass):
+    def addPlayerClass(self, playerClass: PlayerClass):
         self.playerClass = playerClass
         return
 
     @classmethod
-    def buildCharFromScratch(abilityScores, race):
+    def buildCharFromScratch(abilityScores, race, background):
         """NOT YET IMPLEMENTED"""
         return NotImplemented
 
     @property
-    def armorClass(self):
+    def availableSpells(self) -> list:
+        spells: list = list(self.knownSpells.values())
+        return sorted(filter(lambda x : x.level <= self.profBonus-1, spells))
+
+    @property
+    def availableSpells_str(self) -> str:
+        spellNames = list()
+        for i in self.availableSpells:
+            spellNames.append(str(i))
+        return '\n'.join(spellNames)
+
+    @property
+    def armorClass(self) -> int:
         if self._equippedArmorName == None:
             return self.unarmoredAC
         return self.inventory[self._equippedArmorName].armorClassValue(self.dexMod)
@@ -150,7 +165,7 @@ class Character:
 
     def loadSpellsfromFile(self, filename):
         loader = SpellLoader(filename)
-        self.spells = loader.spells
+        self.knownSpells = loader.spells
         return
         
 # END Character class
