@@ -1,6 +1,9 @@
 from math import inf
+import math
 import Character
 from Infusion import Infusion
+from Spell import Spell
+from SpellLoader import SpellLoader
 
 class PlayerClass:
     '''Abstract base class that represents elements common to playerClasses'''
@@ -8,24 +11,31 @@ class PlayerClass:
         self.name = None
         self.character = None
         self.spellCastingAbility = None
-        self.classSpells = None
+        self.classSpells: dict = dict()
 
 class Artificer(PlayerClass):
-    def __init__(self) -> None:
+    def __init__(self, levels:int = 0) -> None:
         super().__init__()
+        self.levels = levels
         self.name = 'Artificer'
         self.spellcastingAbility = 'int'
         self.spellSaveDC = None
         self.spellAttackBonus = None
+        spellLoader = SpellLoader(filename='Artificer_spell_list.json')
+        self.classSpells: dict = spellLoader.spells
         
         # Infusions
-        self.maxNumInfusions = None
-        # self.maxNumInfusionsPrepared
         self.knownInfusions = set()
         self.preparedInfusions = set()
 
         self.characterInventory = None
     # END init
+
+    @property
+    def maxNumInfusions(self):
+        if self.levels == 1:
+            return 0
+        return math.ceil((self.levels-1)/4 + 1)*2
 
     @property
     def maxNumInfusionsPrepared(self):
@@ -37,14 +47,6 @@ class Artificer(PlayerClass):
         '''Return the number of infusions both prepared and known'''
         return len(self.knownInfusions) + len(self.preparedInfusions)
 
-    def canLearnInfusion(self, infusion:Infusion) -> bool:
-
-        if (infusion in self.knownInfusions) or (infusion in self.preparedInfusions):
-            raise Exception(f"Infusion ({infusion.name}) already known")
-        totalNumInfusions = len(self.knownInfusions) + len(self.preparedInfusions)
-        if totalNumInfusions >= self.maxNumInfusions:
-            raise Exception('Max number of infusions reached')
-
     def learnSingleInfusion(self, infusion_in):
         if not isinstance(infusion_in, Infusion):
             raise TypeError(f"{infusion_in} is not an Infusion")
@@ -52,17 +54,14 @@ class Artificer(PlayerClass):
             raise Exception(f"Infusion ({infusion_in.name}) already known")
         self.knownInfusions.add(infusion_in)
 
-        return
-
     def learnInfusions(self, *infusions):
         newNumTotalInfusions = self.totalNumInfusions + len(infusions)
-        if newNumTotalInfusions >= self.maxNumInfusions:
+        if newNumTotalInfusions > self.maxNumInfusions:
             raise Exception('New Infusions would exceed max number of Infusions')
 
         for i in infusions:
             self.learnSingleInfusion(i)
-        return
-
+        
     # TODO allow multiple infusions to be passed as arguments to bulk-prepare Infusions
     def prepareInfusion(self, infusion: Infusion, characterInventory: dict):
         """Add infusion(s) to the set of prepared infusions
@@ -80,7 +79,6 @@ class Artificer(PlayerClass):
         self.preparedInfusions.add(infusion)
         self.knownInfusions.remove(infusion)
         infusion.activate(characterInventory)
-        pass
 
     def clearInfusions(self, inventory:dict):
         """Deactivate and unprepare all infusions"""
