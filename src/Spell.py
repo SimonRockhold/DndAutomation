@@ -1,5 +1,4 @@
 from functools import total_ordering
-from typing import Dict
 
 @total_ordering    
 class Spell:
@@ -17,7 +16,7 @@ class Spell:
         self.name = name
         self.level = level
         self.school = school
-        self.time = time[0]
+        self.time = time
         self.range = range
         self.components = components
         self.duration = duration
@@ -43,6 +42,7 @@ class Spell:
 Casting time: {self.time_str()}
 Range: {self.range_str()}
 Components: {self.components_str()}
+Duration: {self.duration_str()}
 {self.entries_str()}
 
             """
@@ -65,14 +65,36 @@ Components: {self.components_str()}
     range, distance, 'type': unlimited, sight, (miles, feet):amount
     """
 
+
+
     def time_str(self) -> str:
         '''human readable representation of spell casting time'''
-        output = '{0} {1}'.format(self.time['number'], self.time['unit'])
+        output = f"{self.time['number']} {self.time['unit']}"
         if 'condition' in self.time:
             output += ', which you take ' + self.time['condition']
         if self.concentration:
             output += ' (concentration)'
         return output
+
+    def duration_str(self) -> str:
+        output = ''
+        durationType = self.duration['type']
+        if durationType == 'timed':
+            durationUnit = self.duration['duration']['type']
+            durationNumber = self.duration['duration']['amount']
+            if durationNumber > 1:
+                durationUnit += 's'
+            output += f"{durationNumber} {durationUnit}"
+        if durationType == 'instant':
+            output = 'instant'
+        if durationType == 'permanent':
+            output = 'permanent. '
+            if 'ends' in self.duration:
+                endCondition = self.duration['ends']
+                output += 'end condition: '
+                output += ', '.join(endCondition)
+        return output
+        
 
     def components_str(self) -> str:
         components = self.components

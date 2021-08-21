@@ -55,19 +55,3 @@ class Ability:
 
     def __repr__(self) -> str:
         return f"{self.name}, {self.description}"
-
-# %%
-from Heritage import Ability
-print(Ability('spellcasting', 'can cast spells'))
-
-
-# %%
-from Heritage import HeritageLoader, Heritage, Ability
-hl = HeritageLoader('Gnome.json')
-gnome = hl.interpret_json()
-print(gnome.__repr__())
-
-for i in gnome.abilities:
-    print(i)
-print(gnome.abilities)
-# %%

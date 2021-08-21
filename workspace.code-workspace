@@ -1,0 +1,14 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"python.envFile": "${workspaceFolder}/default.env",
+		"python.terminal.launchArgs": [
+
+		
+		]
+	}
+}
