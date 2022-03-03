@@ -7,7 +7,16 @@ import math
 
 class Character:
     '''Describes the state of a character'''
-    def __init__(self, strength:int, dextertity:int, constitution:int, intelligence:int, wisdom:int, charisma:int, level: int, playerClass: PlayerClass, maxHealth:int = None, heritage:Heritage = None) -> None:
+    def __init__(self, strength:int, 
+                    dextertity:int, 
+                    constitution:int, 
+                    intelligence:int, 
+                    wisdom:int, 
+                    charisma:int, 
+                    level: int, 
+                    playerClass: PlayerClass, 
+                    maxHealth:int = None, 
+                    heritage:Heritage = None) -> None:
         self.profBonus = math.ceil(level/4) + 1
         
         self.heritage = heritage
