@@ -6,22 +6,34 @@ class Main_Window:
         self.parent = parent
         self.frame = tk.Frame(self.parent)
         self.frame.grid(column=1, row=0, padx=5, pady=5)
-        Name_field(self.frame)
-        Ability_score_block(self.frame)
+        self.name_field = Name_field(self.frame)
+        self.score_block = Ability_score_block(self.frame)
         player_classes = ('Artificer', 'Barbarian', 'Bard', 'Cleric', 'Druid', 'Fighter', 'Monk', 'Paladin', 'Ranger', 'Rogue', 'Sorcerer', 'Warlock', 'Wizard')
-        Class_selector(self.frame, player_classes)
+        self.class_selector = Class_selector(self.frame, player_classes)
 
+        self.name_field.grid(padx=5, pady=5, sticky=tk.W)
+        self.score_block.grid(padx=5, pady=5)
+        self.class_selector.grid()
 
-class Ability_score:
-    def __init__(self, parent, name) -> None:
+        ttk.Button(self.frame, text="print values", command=self.print_values).grid()
+
+    def print_values(self):
+        print(self.name_field.get_name())
+        print(self.class_selector.get_selected())
+        print(self.score_block.get_scores())
+
+class Ability_score(ttk.Frame):
+    def __init__(self, parent, name):
+        super().__init__(parent)
         self.parent = parent
         self.name = name
         self.ability_score_val = tk.IntVar()
         abilityscore_validate_command = (self.parent.register(self.ability_validate),
             '%d', '%i', '%P', '%s', '%S', '%v', '%V', '%W')
-        tk.Label(self.parent, text=self.name).grid(column=0)
-        ability_score_entry = tk.ttk.Entry(self.parent, width=4, textvariable=self.ability_score_val, validate="key", validatecommand=abilityscore_validate_command)
-        ability_score_entry.grid(column=1)
+        self.label = tk.Label(self, text=self.name)
+        ability_score_entry = tk.ttk.Entry(self, width=4, textvariable=self.ability_score_val, validate="key", validatecommand=abilityscore_validate_command)
+        # ability_score_entry.grid(column=1, row=0, sticky=tk.E, padx=5)
+        ability_score_entry.grid()
 
 
     def ability_validate(self, d, i, P, s, S, v, V, W):
@@ -37,20 +49,39 @@ class Ability_score:
             self.parent.bell()
             # system ding
             return False
+
+    def get_label(self):
+        if self.label:
+            return self.label
 #END Ability_score
 
-class Ability_score_block:
-    def __init__(self, parent) -> None:
+class Ability_score_block(ttk.Frame):
+    def __init__(self, parent):
+        super().__init__(parent)
         self.parent = parent
-        self.frame = tk.Frame(self.parent)
-        self.frame.grid()
-        self.str_box = Ability_score(self.frame, "Strength")
-        self.dex_box = Ability_score(self.frame, "Dexterity")
-        self.con_box = Ability_score(self.frame, "Constitution")
-        self.int_box = Ability_score(self.frame, "Intelligence")
-        self.wis_box = Ability_score(self.frame, "Wisdom")
-        self.cha_box = Ability_score(self.frame, "Charisma")
-        #ttk.Button(self.frame, text='print', command=self.get_scores).grid()
+        self.str_box = Ability_score(self, name="Strength")
+        self.dex_box = Ability_score(self, "Dexterity")
+        self.con_box = Ability_score(self, "Constitution")
+        self.int_box = Ability_score(self, "Intelligence")
+        self.wis_box = Ability_score(self, "Wisdom")
+        self.cha_box = Ability_score(self, "Charisma")
+
+        tk.Label(self, text=self.str_box.name).grid(column=0, row=0)
+        tk.Label(self, text=self.dex_box.name).grid(column=0, row=1)
+        tk.Label(self, text=self.con_box.name).grid(column=0, row=2)
+        tk.Label(self, text=self.int_box.name).grid(column=0, row=3)
+        tk.Label(self, text=self.wis_box.name).grid(column=0, row=4)
+        tk.Label(self, text=self.cha_box.name).grid(column=0, row=5)
+
+        self.str_box.grid(column=1, row = 0)
+        self.dex_box.grid(column=1, row = 1)
+        self.con_box.grid(column=1, row = 2)
+        self.int_box.grid(column=1, row = 3)
+        self.wis_box.grid(column=1, row = 4)
+        self.cha_box.grid(column=1, row = 5)
+        
+        # ttk.Button(self, text='print', command=self.get_scores).grid()
+
         
     def get_scores(self):
         str = self.str_box.ability_score_val.get()
@@ -66,23 +97,21 @@ class Ability_score_block:
 #END Ability_score_block
 
 
-class Name_field:
+class Name_field(ttk.Frame):
+    """Receive name entry"""
     def __init__(self, parent) -> None:
+        super().__init__(parent)
         self.parent = parent
         
         name_validate_command = (self.parent.register(self.name_validate),
             '%d', '%i', '%P', '%s', '%S', '%v', '%V', '%W')
-        ttk.Label(self.parent, text="character name").grid()
-        char_name = tk.StringVar()
+        ttk.Label(self, text="character name").grid()
+        self.name_var = tk.StringVar()
         # updates the value of data['name'] when the name entry is changed.
-        #char_name.trace_add('write', update_name)
-        name_entry = ttk.Entry(self.parent, width=12, textvariable=char_name, validate="key", validatecommand=name_validate_command)
+        #self.name_var.trace_add('write', update_name)
+        name_entry = ttk.Entry(self, width=12, textvariable=self.name_var, validate="key", validatecommand=name_validate_command)
         name_entry.grid()
         
-
-    # def update_name(*args):
-    #     data['name'] = char_name.get()
-    #     #print(data['name'])
 
     def sanitize_filename(character_name):
         #check if name is empty
@@ -103,28 +132,29 @@ class Name_field:
             return False
         else:
             return True
+
+    def get_name(self):
+        return self.name_var.get()
 #END Name_field
 
-class Class_selector:
+class Class_selector(ttk.Frame):
     def __init__(self, parent, player_classes) -> None:
+        super().__init__(parent)
         self.parent = parent
         self.player_classes = player_classes
         
-        ttk.Label(self.parent, text="Player Class").grid()
+        ttk.Label(self, text="Player Class").grid()
         # label_text = tk.StringVar()
         # update_label = ttk.Label(self.parent, textvariable=label_text).grid()
-        class_var = tk.StringVar()
-        player_class_selector = ttk.Combobox(self.parent, textvariable=class_var)
-        # player_class_selector.bind('<<ComboboxSelected>>', self.update_player_class)
+        self.class_var = tk.StringVar()
+        player_class_selector = ttk.Combobox(self, textvariable=self.class_var)
         player_class_selector.bind('<<ComboboxSelected>>', lambda *defs : player_class_selector.selection_clear())
         player_class_selector['values'] = player_classes
         player_class_selector.grid()
         player_class_selector.state(['readonly'])
 
-
-    def update_player_class(selector, text):
-        selector.selection_clear()
-        text.set(selector.getvar())
+    def get_selected(self):
+        return self.class_var.get()
 
     # def set_current_selection(selection):
     #     if selection in player_class_list:
