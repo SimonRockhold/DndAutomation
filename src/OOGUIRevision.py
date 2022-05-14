@@ -1,5 +1,3 @@
-from cProfile import label
-from sqlite3 import Row
 import tkinter as tk
 from tkinter import TclError, ttk
 from turtle import bgcolor
@@ -41,8 +39,10 @@ class Controller:
 
     def print_values(self):
         temp = self.view.window
-        print(temp.name_field.get_name())
-        print(temp.class_selector.get_selected())
+        print(f"name: {temp.name_field.get()}")
+        print(f"class: {temp.class_selector.get()}")
+        print(f"level: {temp.level_field.get()}")
+        print(f"max health: {temp.max_health.get()}")
         print(temp.score_block.get_scores())
         
 # End Controller
@@ -77,10 +77,6 @@ class Main_Window:
         else:
             raise Exception
 
-    def print_values(self):
-        print(self.name_field.get_name())
-        print(self.class_selector.get_selected())
-        print(self.score_block.get_scores())
 
 
 class Model:
@@ -143,8 +139,8 @@ class Ability_score(ttk.Frame):
                        prior_value, text_delta, validation_type, trigger_type, widget_name):
         # -> ability scores should never be larger than 30 per the rulebook, but could occur in homebrew.
         # -> Disallow any non-number characters.    
-        # allow empty value so that user can use backspace to get to the beginning before entering new value.     
         self.ability_score_entry.config({"foreground":"Black"})
+        # allow empty value so that user can use backspace to get to the beginning before entering new value.     
         if not value_if_allowed:
             return True
         # otherwise only allow values that can be converted to an int
@@ -222,7 +218,7 @@ class Ability_score_block(ttk.Frame):
             
 
         scores = {'str':raw_scores[0], 'dex':raw_scores[1], 'con':raw_scores[2], 'int':raw_scores[3], 'wis':raw_scores[4], 'cha':raw_scores[5]}
-        print(scores)
+        # print(scores)
         return scores
 
     def set_scores(self, new_scores:list):
@@ -237,11 +233,31 @@ class Health_field(ttk.Frame):
     def __init__(self, parent):
         super().__init__(parent)
         self.parent = parent
-
+        health_validate_command = (self.parent.register(self.health_validate),
+            '%d', '%i', '%P', '%s', '%S', '%v', '%V', '%W')
         ttk.Label(self, text="Maximum Health").grid()
-        self.health_var = tk.IntVar()
-        health_entry = ttk.Entry(self, width=4, textvariable=self.health_var)
+        self.health_val = tk.IntVar()
+        health_entry = ttk.Entry(self, width=4, textvariable=self.health_val, validate="key", validatecommand=health_validate_command)
         health_entry.grid()
+
+    def health_validate(self, action, index, value_if_allowed,
+                       prior_value, text_delta, validation_type, trigger_type, widget_name):
+        try:
+            int(value_if_allowed)
+            return True
+        except ValueError:
+            return False
+
+    def get(self):
+        try:
+            return self.health_val.get()
+        except tk.TclError:
+            return -1
+
+    def set_health(self, new_val):
+        # TODO add validation to all potential values.
+        self.health_val.set(new_val)
+
 
 class Level_field(ttk.Frame):
     def __init__(self, parent):
@@ -252,6 +268,12 @@ class Level_field(ttk.Frame):
         self.level_var = tk.IntVar()
         level_entry = ttk.Entry(self, width=4, textvariable=self.level_var)
         level_entry.grid()
+
+    def get(self):
+        try:
+            return int(self.level_var.get())
+        except tk.TclError:
+            return -1
 
 class Name_field(ttk.Frame):
     """Receive name entry"""
@@ -289,8 +311,9 @@ class Name_field(ttk.Frame):
         else:
             return True
 
-    def get_name(self):
+    def get(self):
         return self.name_var.get()
+
 #END Name_field
 
 class Class_selector(ttk.Frame):
@@ -309,7 +332,7 @@ class Class_selector(ttk.Frame):
         player_class_selector.grid()
         player_class_selector.state(['readonly'])
 
-    def get_selected(self):
+    def get(self):
         return self.class_var.get()
 
     # def set_current_selection(selection):
