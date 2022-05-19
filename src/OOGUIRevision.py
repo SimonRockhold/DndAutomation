@@ -1,13 +1,13 @@
+import json
 import tkinter as tk
-from tkinter import TclError, ttk
-from turtle import bgcolor
-
+from tkinter import ttk
 from Character import Character
 
 class App(tk.Tk):
     def __init__(self):
         super().__init__()
-
+        # 'widthxlength'
+        self.geometry('300x450')
         self.title("Edit Character")
 
         model = Model()
@@ -21,7 +21,7 @@ class View(ttk.Frame):
     def __init__(self, parent):
         super().__init__(parent)
 
-        self.controller = None
+        self.controller:Controller = None
         self.window = Main_Window(parent=parent, view=self)
 
     def set_controller(self, controller):
@@ -31,19 +31,60 @@ class View(ttk.Frame):
 
 class Controller:
     def __init__(self, model, view) -> None:
-        self.model = model
-        self.view = view
-        
-    def save(self):
-        return NotImplemented
+        self.model:Model = model
+        self.view:View = view
 
     def print_values(self):
         temp = self.view.window
         print(f"name: {temp.name_field.get()}")
         print(f"class: {temp.class_selector.get()}")
         print(f"level: {temp.level_field.get()}")
-        print(f"max health: {temp.max_health.get()}")
+        print(f"max health: {temp.max_health_field.get()}")
         print(temp.score_block.get_scores())
+
+    def save(self):
+        view = self.view.window
+        self.model.set_data(
+            name=view.name_field.get(), 
+            level=view.level_field.get(), 
+            max_health=view.max_health_field.get(), 
+
+            ability_scores=view.score_block.get_scores(),
+            
+            player_class=view.class_selector.get())
+        filepath = self.model.filepath
+        name = self.model.data['name']
+        #TODO check to see if there is a name collision and ask the user to confirm replacement
+        with open(f"{filepath}{self.sanitize_filename(name)}.json", 'w') as outfile:
+            json.dump(self.model.data, outfile)
+
+    def load_from_file(self, filename):
+        filepath = f"{self.model.filepath}{filename}"
+        # try:
+        #     with open(filepath) as json_file:
+        #         self.model.data = json.load(json_file)
+        # except FileNotFoundError:
+        #     raise
+        with open(filepath) as json_file:
+            self.model.data = json.load(json_file)
+        self.update_fields()
+
+    def update_fields(self):
+        view = self.view.window
+        data = self.model.data
+        view.name_field.set(data['name'])
+        view.level_field.set(data['level']) 
+        view.max_health_field.set(data['health']) 
+        view.score_block.set_scores(data['ability_scores'])
+        view.class_selector.set(data['class'])
+
+    def sanitize_filename(self, name):
+        #check if name is empty
+        if not name:
+            raise Exception("name must not be empty")
+        #Remove preceding whitespace, replace whitespace with underscores, cast to lower case
+        filename = name.lstrip().replace(" ", "_").lower()
+        return filename
         
 # End Controller
 
@@ -51,25 +92,42 @@ class Main_Window:
     # def __init__(self, parent, controller):
     def __init__(self, parent, view):
 
-        self.view = view
+        self.view:View = view
         self.parent = parent
         self.frame = tk.Frame(self.parent)
         self.name_field = Name_field(self.frame)
         self.level_field = Level_field(self.frame)
-        self.max_health = Health_field(self.frame)
+        self.max_health_field = Health_field(self.frame)
         self.score_block = Ability_score_block(self.frame)
+        # TODO player classes list to Model or Controller object
         player_classes = ('Artificer', 'Barbarian', 'Bard', 'Cleric', 'Druid', 'Fighter', 'Monk', 'Paladin', 'Ranger', 'Rogue', 'Sorcerer', 'Warlock', 'Wizard')
         self.class_selector = Class_selector(self.frame, player_classes)
 
         self.frame.grid(column=1, row=0, padx=5, pady=5)
         self.name_field.grid(padx=5, pady=5, sticky=tk.W)
         self.level_field.grid(column=1, row=0, padx=5, pady=5)
-        self.max_health.grid(padx=5, pady=5, sticky=tk.W)
+        self.max_health_field.grid(padx=5, pady=5, sticky=tk.W)
         self.score_block.grid(padx=5, pady=5)
         self.class_selector.grid()
 
         ttk.Button(self.frame, text="print values", command=self.button_pressed).grid()
+        ttk.Button(self.frame, text="save", command=self.save_button_pressed).grid()
+        ttk.Button(self.frame, text="load save", command=self.load_button_pressed).grid()
 
+
+    def load_button_pressed(self):
+        if self.view.controller:
+            # THIS IS A PLACEHOLDER, OH GOD PLEASE ADD A FILE SELECTOR
+            # TODO add a file selector
+            self.view.controller.load_from_file("beepo.json")
+        else:
+            raise Exception("can't load, can't find controller. Where'd you put it last?")
+
+    def save_button_pressed(self):
+        if self.view.controller:
+            self.view.controller.save()
+        else:
+            raise Exception("can't save: no controller, that's weird")
 
     def button_pressed(self):
         if self.view.controller:
@@ -78,16 +136,16 @@ class Main_Window:
             raise Exception
 
 
-
 class Model:
     '''Model should not require knowledge of other components. Is responsible for storage and maybe data validation'''
     def __init__(self) -> None:
+        self.filepath = "data/characters/"
         self.character:Character = None
         self.data = {
             'name':None,
             'class':None,
             'level':None,
-            'stats': {
+            'ability_scores': {
                 'str':None,
                 'dex':None,
                 'con':None,
@@ -99,7 +157,18 @@ class Model:
             'race':None
         }
 
+    def set_data(self, name, ability_scores, level, player_class, max_health):
+        '''method to initialize the data dict and to load from save'''
+        # ability_scores = ['str', 'dex', 'con', 'int', 'wis', 'cha']
+        self.data['name'] = name
+        self.data['class'] = level
+        self.data['ability_scores'] = ability_scores
+        self.data['level'] = level
+        self.data['class'] = player_class
+        self.data['health'] = max_health
+
     def create_character(self, stat_array, level, player_class, max_health):
+
         self.character = Character(
             strength=stat_array['str'],
             dextertity=stat_array['dex'],
@@ -108,6 +177,7 @@ class Model:
             wisdom=stat_array['wis'],
             charisma=stat_array['cha'],
             playerClass=player_class, maxHealth=max_health,
+            level=level,
             heritage=None
             )
         return NotImplemented
@@ -120,6 +190,7 @@ class Ability_score(ttk.Frame):
         self.parent = parent
         self.name = name
         self.ability_score_val = tk.IntVar()
+        # set default value to 10 to follow D&D convention.
         self.ability_score_val.set(10)
         self.ability_mod_val = tk.IntVar()
         abilityscore_validate_command = (self.parent.register(self.ability_validate),
@@ -137,7 +208,6 @@ class Ability_score(ttk.Frame):
 
     def ability_validate(self, action, index, value_if_allowed,
                        prior_value, text_delta, validation_type, trigger_type, widget_name):
-        # -> ability scores should never be larger than 30 per the rulebook, but could occur in homebrew.
         # -> Disallow any non-number characters.    
         self.ability_score_entry.config({"foreground":"Black"})
         # allow empty value so that user can use backspace to get to the beginning before entering new value.     
@@ -148,12 +218,7 @@ class Ability_score(ttk.Frame):
             self.ability_score_val.set(0)
             # return False
         try:
-            value = int(value_if_allowed)
-            # change text color to red if value is greater than 30
-            if value > 30:
-                self.ability_score_entry.config({"foreground":"Red"})
-            else:
-                self.ability_score_entry.config({"foreground":"Black"})
+            int(value_if_allowed)
             return True
         except ValueError:
             return False
@@ -164,15 +229,20 @@ class Ability_score(ttk.Frame):
             self.set_val(0)
 
     def update_ability_mod(self, event):
+        '''Update ability modifier field. To be called when changes are made to the ability score.'''
         # the get() method of the tk.IntVar will throw an error if the value is set to an empty string
         try:
             ability_score = self.ability_score_val.get()
-            # print(f"({ability_score} - 10) / 2 = {(ability_score-10)//2}")
             self.ability_mod_val.set((ability_score - 10) // 2)
+            if ability_score > 30:
+                # Indicate when ability score exceeds the normal maximum value to help catch human input errors.
+                self.ability_score_entry.config({"foreground":"Red"})
+            else:
+                self.ability_score_entry.config({"foreground":"Black"})
         except tk.TclError:
             # treat no value the same as 0 for simplicity's sake. (a score of 0 yields -5)
+            self.ability_score_entry.config({"foreground":"Black"})
             self.ability_mod_val.set(-5)
-            return
 
     def get_label(self):
         if self.label:
@@ -186,6 +256,7 @@ class Ability_score(ttk.Frame):
 
     def set_val(self, new_value):
         self.ability_score_val.set(new_value)
+        self.update_ability_mod(None)
 
 #END Ability_score
 
@@ -212,20 +283,25 @@ class Ability_score_block(ttk.Frame):
 
         
     def get_scores(self):
+        '''return a dict containing the abreviated score label and value(eg. 'str':15)'''
         raw_scores = []
         for ability_score in self.ability_scores:
             raw_scores.append(ability_score.get_val())
-            
-
         scores = {'str':raw_scores[0], 'dex':raw_scores[1], 'con':raw_scores[2], 'int':raw_scores[3], 'wis':raw_scores[4], 'cha':raw_scores[5]}
-        # print(scores)
+        # print(raw_scores)
         return scores
+        # return raw_scores
 
-    def set_scores(self, new_scores:list):
-        if len(new_scores) != len(self.ability_scores):
-            raise SyntaxError("length mismatch")
-        for ability_score, new_score in self.ability_scores, new_scores:
-            ability_score.ability_score_val = new_score
+    def set_scores(self, new_scores):
+        # if new_scores is neither a list or a dict, raise error
+        if not isinstance(new_scores, list):
+            if isinstance(new_scores, dict):
+                new_scores = list(new_scores.values())
+            else:
+                raise TypeError("expected list or dict")
+        for i in range(6):
+                self.ability_scores[i].set_val(new_scores[i])
+
 
 #END Ability_score_block
 
@@ -254,7 +330,7 @@ class Health_field(ttk.Frame):
         except tk.TclError:
             return -1
 
-    def set_health(self, new_val):
+    def set(self, new_val):
         # TODO add validation to all potential values.
         self.health_val.set(new_val)
 
@@ -274,6 +350,10 @@ class Level_field(ttk.Frame):
             return int(self.level_var.get())
         except tk.TclError:
             return -1
+
+    def set(self, new_val):
+        self.level_var.set(new_val)
+
 
 class Name_field(ttk.Frame):
     """Receive name entry"""
@@ -313,6 +393,9 @@ class Name_field(ttk.Frame):
 
     def get(self):
         return self.name_var.get()
+    
+    def set(self, new_name):
+        self.name_var.set(new_name)
 
 #END Name_field
 
@@ -334,6 +417,10 @@ class Class_selector(ttk.Frame):
 
     def get(self):
         return self.class_var.get()
+
+    def set(self, class_from_list):
+        # TODO implement some form of input sanitization
+        self.class_var.set(class_from_list)
 
     # def set_current_selection(selection):
     #     if selection in player_class_list:
