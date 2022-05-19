@@ -1,6 +1,6 @@
 import json
 import tkinter as tk
-from tkinter import ttk
+from tkinter import ttk, filedialog as fd
 from Character import Character
 
 class App(tk.Tk):
@@ -47,10 +47,8 @@ class Controller:
         self.model.set_data(
             name=view.name_field.get(), 
             level=view.level_field.get(), 
-            max_health=view.max_health_field.get(), 
-
+            max_health=view.max_health_field.get(),
             ability_scores=view.score_block.get_scores(),
-            
             player_class=view.class_selector.get())
         filepath = self.model.filepath
         name = self.model.data['name']
@@ -58,8 +56,8 @@ class Controller:
         with open(f"{filepath}{self.sanitize_filename(name)}.json", 'w') as outfile:
             json.dump(self.model.data, outfile)
 
-    def load_from_file(self, filename):
-        filepath = f"{self.model.filepath}{filename}"
+    def load_from_file(self, filepath):
+        # filepath = f"{self.model.filepath}{filename}"
         # try:
         #     with open(filepath) as json_file:
         #         self.model.data = json.load(json_file)
@@ -117,9 +115,9 @@ class Main_Window:
 
     def load_button_pressed(self):
         if self.view.controller:
-            # THIS IS A PLACEHOLDER, OH GOD PLEASE ADD A FILE SELECTOR
-            # TODO add a file selector
-            self.view.controller.load_from_file("beepo.json")
+            filename = fd.askopenfilename(initialdir="data/characters/")
+
+            self.view.controller.load_from_file(filename)
         else:
             raise Exception("can't load, can't find controller. Where'd you put it last?")
 
